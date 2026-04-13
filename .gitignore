@@ -1,0 +1,33 @@
+# Compiled output
+/dist
+/node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+
+# Testing
+/coverage
+
+# TypeScript
+tsbuildinfo
+
+# Build tools
+.npm
+.gyp
+
+*.pem
