@@ -12,11 +12,11 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   async create(createProductDto: CreateProductDto, file: Express.Multer.File): Promise<Product> {
     const uploadResult = await this.s3Service.uploadFile(file);
-    
+
     const product = this.productRepository.create({
       name: createProductDto.name,
       price: Number(createProductDto.price),
@@ -33,14 +33,14 @@ export class ProductService {
   async findOne(id: string): Promise<Product> {
     const product = await this.productRepository.findOneBy({ id });
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundException(`Product with ID ${id} not found.`);
     }
     return product;
   }
 
   async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
     const product = await this.findOne(id);
-    
+
     const updatedProduct = this.productRepository.merge(product, {
       ...updateProductDto,
       price: updateProductDto.price ? Number(updateProductDto.price) : product.price,
