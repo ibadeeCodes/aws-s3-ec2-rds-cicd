@@ -1,3 +1,10 @@
+name: Deploy via Tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,13 +26,10 @@ jobs:
 
           cd ~/aws-s3-ec2-rds-cicd
 
-          echo "Fetching tags..."
           git fetch --tags
 
-          echo "Saving current version..."
           git rev-parse HEAD > prev_commit.txt
 
-          echo "Deploying tag: $TAG_NAME"
           git checkout $TAG_NAME
 
           npm install
@@ -36,15 +40,11 @@ jobs:
           pm2 delete nest-app || true
           pm2 start ecosystem.config.js
 
-          echo "Health check..."
           sleep 5
 
-          for i in {1..5}; do
-            curl -f http://localhost:3000/health && break
-            sleep 2
-          done || (
+          curl -f http://localhost:3000/health || (
 
-            echo "Deployment failed. Rolling back..."
+            echo "Rollback triggered"
 
             npm run migration:revert
 
@@ -58,7 +58,5 @@ jobs:
 
             exit 1
           )
-
-          echo "Deployment successful!"
 
           EOF
