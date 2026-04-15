@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import { Product } from '../product/entities/product.entity';
 import { Cat } from '../cats/entities/cat.entity';
 import { Dog } from '../dogs/entities/dog.entity';
+import { Tiger } from '../tigers/entities/tiger.entity';
 
 config();
 
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'nestjs_db',
-  entities: [Product, Cat, Dog],
+  entities: [Product, Cat, Dog, Tiger],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,
   ssl: {

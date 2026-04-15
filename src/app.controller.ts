@@ -18,6 +18,8 @@ export class AppController {
 
   @Get('/health')
   async health() {
+    throw new Error('Intentional bug for rollback testing');
+
     // check DB connection
     await this.dataSource.query('SELECT 1');
 
