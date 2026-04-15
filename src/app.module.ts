@@ -6,8 +6,10 @@ import { AppService } from './app.service';
 import { S3Module } from './s3/s3.module';
 import { ProductModule } from './product/product.module';
 import { CatsModule } from './cats/cats.module';
+import { DogsModule } from './dogs/dogs.module';
 import { Product } from './product/entities/product.entity';
 import { Cat } from './cats/entities/cat.entity';
+import { Dog } from './dogs/entities/dog.entity';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
@@ -24,7 +26,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [Product, Cat],
+        entities: [Product, Cat, Dog],
         synchronize: false,
         ssl: {
           rejectUnauthorized: false,
@@ -34,6 +36,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     S3Module,
     ProductModule,
     CatsModule,
+    DogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
