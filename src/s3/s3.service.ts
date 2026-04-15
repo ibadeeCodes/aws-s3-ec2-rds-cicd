@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ObjectCannedACL, HeadBucketCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
 export class S3Service {
@@ -16,6 +16,13 @@ export class S3Service {
       },
     });
     this.bucketName = this.configService.get<string>('AWS_S3_BUCKET')!;
+  }
+
+  async checkHealth() {
+    const command = new HeadBucketCommand({
+      Bucket: this.bucketName,
+    });
+    await this.s3Client.send(command);
   }
 
   async uploadFile(file: Express.Multer.File) {
