@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (just for pipeline context)
+      - name: Checkout (pipeline context only)
         uses: actions/checkout@v4
 
       - name: Setup SSH
@@ -24,76 +24,91 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
 
-          cd ~/aws-s3-ec2-rds-cicd
+          set -e
 
-          echo "=== Fetching latest tags ==="
+          APP_DIR=~/aws-s3-ec2-rds-cicd
+          DEPLOY_DIR=~/aws-s3-ec2-rds-cicd/deployment
+
+          echo "=============================="
+          echo "Deploying version: $TAG_NAME"
+          echo "=============================="
+
+          cd $APP_DIR
+
+          echo "Fetching tags..."
           git fetch --tags
 
-          echo "=== Moving to deployment folder ==="
-          cd deployment
-
-          echo "=== Saving previous version ==="
-          if [ -f current_version.txt ]; then
-            cp current_version.txt previous_version.txt
+          echo "Saving previous version..."
+          if [ -f "$DEPLOY_DIR/current_version.txt" ]; then
+            cp "$DEPLOY_DIR/current_version.txt" "$DEPLOY_DIR/previous_version.txt"
+          else
+            echo "v0.0" > "$DEPLOY_DIR/previous_version.txt"
           fi
 
           echo "Previous version:"
-          cat previous_version.txt || echo "None"
+          cat "$DEPLOY_DIR/previous_version.txt"
 
-          echo "=== Deploying new version: $TAG_NAME ==="
-          cd ~/aws-s3-ec2-rds-cicd
-          git checkout $TAG_NAME
+          echo "Checking out new tag..."
+          git checkout "$TAG_NAME"
 
-          echo "$TAG_NAME" > deployment/current_version.txt
+          echo "$TAG_NAME" > "$DEPLOY_DIR/current_version.txt"
 
-          echo "=== Installing dependencies ==="
+          echo "Installing dependencies..."
           npm install
 
-          echo "=== Building app ==="
+          echo "Building app..."
           npm run build
 
-          echo "=== Running migrations ==="
+          echo "Running migrations..."
           npm run migration:run
 
-          echo "=== Restarting app ==="
+          echo "Restarting app..."
           pm2 delete nest-app || true
           pm2 start ecosystem.config.js
 
-          echo "=== Health check ==="
+          echo "Waiting for health check..."
           sleep 5
 
           curl -f http://localhost:3000/health || (
 
-            echo "❌ Deployment failed. Rolling back..."
+            echo "❌ Deployment failed — starting rollback..."
 
-            echo "Reverting DB..."
+            echo "Reverting database..."
             npm run migration:revert
 
+            echo "Reading previous version..."
+            PREV_VERSION=$(cat "$DEPLOY_DIR/previous_version.txt" | tr -d '[:space:]')
+
+            echo "PREV_VERSION = $PREV_VERSION"
+
+            if [ -z "$PREV_VERSION" ]; then
+              echo "❌ No previous version found. Abort rollback."
+              exit 1
+            fi
+
             echo "Rolling back code..."
-            cd deployment
-            PREV_VERSION=$(cat previous_version.txt)
+            cd $APP_DIR
+            git checkout "$PREV_VERSION"
 
-            cd ~/aws-s3-ec2-rds-cicd
-            git checkout $PREV_VERSION
+            echo "Restoring version file..."
+            echo "$PREV_VERSION" > "$DEPLOY_DIR/current_version.txt"
 
-            echo "Restoring version file to $PREV_VERSION...."
-            echo "$PREV_VERSION" > deployment/current_version.txt
-
-            echo "Re-installing..."
+            echo "Reinstalling dependencies..."
             npm install
 
-            echo "Re-building..."
+            echo "Rebuilding..."
             npm run build
 
             echo "Restarting app..."
             pm2 delete nest-app || true
             pm2 start ecosystem.config.js
 
-            echo "Rollback completed"
-
+            echo "✅ Rollback completed successfully"
             exit 1
           )
 
+          echo "=============================="
           echo "✅ Deployment successful"
+          echo "=============================="
 
           EOF
