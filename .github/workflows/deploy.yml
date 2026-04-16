@@ -76,7 +76,7 @@ jobs:
             cd ~/aws-s3-ec2-rds-cicd
             git checkout $PREV_VERSION
 
-            echo "Restoring version file..."
+            echo "Restoring version file to $PREV_VERSION..."
             echo "$PREV_VERSION" > deployment/current_version.txt
 
             echo "Re-installing..."
