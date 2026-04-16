@@ -26,8 +26,8 @@ jobs:
 
           set -e
 
-          APP_DIR=~/aws-s3-ec2-rds-cicd
-          DEPLOY_DIR=~/aws-s3-ec2-rds-cicd/deployment
+          APP_DIR=/home/ec2-user/aws-s3-ec2-rds-cicd
+          DEPLOY_DIR=/home/ec2-user/aws-s3-ec2-rds-cicd/deployment
 
           echo "=============================="
           echo "Deploying version: $TAG_NAME"
